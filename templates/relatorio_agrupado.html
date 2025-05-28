@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex, nofollow">
+        <title>Relatório Agrupado de Expedições</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <h1>Relatório Agrupado de Expedições (por Linha/Sola)</h1>
+        <div class="button-group"> 
+            <a href="/expedicao" class="back-button" id="adc-pdd">Voltar ao Formulário</a>
+            <a href="/" class="back-button">Voltar ao Início (Upload)</a>
+            <button onclick="window.print()" class="print-button">Imprimir Relatório</button>
+        </div>
+
+        <table id="tabelaRelatorioAgrupado">
+            <thead>
+                <tr>
+                    <th>Linha/Sola</th>
+                    <th>Quantidade Total Expedida</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <div id="totalGeralContainer" class="total-geral">
+            Total Geral Expedido: <span id="totalGeralValor">0</span>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('/api/relatorio_agrupado_dados')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const tabelaBody = document.querySelector('#tabelaRelatorioAgrupado tbody');
+                        
+                        // Preencher a tabela com os dados agrupados
+                        if (data.dados_agrupados.length === 0) { // Acessa 'dados_agrupados'
+                            tabelaBody.innerHTML = '<tr><td colspan="2">Nenhum dado agrupado para exibir.</td></tr>';
+                        } else {
+                            tabelaBody.innerHTML = ''; // Limpa qualquer mensagem de carregamento
+                            data.dados_agrupados.forEach(item => { // Acessa 'dados_agrupados'
+                                const row = tabelaBody.insertRow();
+                                row.insertCell().textContent = item.linha_sola || 'N/A';
+                                // Formata a quantidade agrupada
+                                row.insertCell().textContent = (item.total_quantidade || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            });
+                        }
+
+                        // Exibir o total geral e formata o número
+                        document.getElementById('totalGeralValor').textContent = (data.total_geral || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); // Acessa 'total_geral'
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar dados do relatório agrupado:', error);
+                        document.querySelector('#tabelaRelatorioAgrupado tbody').innerHTML = '<tr><td colspan="2">Erro ao carregar dados.</td></tr>';
+                        document.getElementById('totalGeralValor').textContent = 'Erro'; // Exibe erro no total
+                    });
+            });
+        </script>
+    </body>
+</html>

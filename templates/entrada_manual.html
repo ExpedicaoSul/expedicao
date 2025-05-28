@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex, nofollow">
+        <title>Entrada Manual de Expedição</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <h1>Entrada Manual de Expedição</h1>
+
+        <div class="button-group"> <a href="/expedicao" class="back-button" id="adc-pdd">Voltar ao Formulário Principal</a>
+            <a href="/relatorio_detalhado" class="back-button">Ver relatório detalhado</a>
+            <a href="/relatorio_agrupado" class="back-button">Ver relatório agrupado</a>
+            <a href="/" class="back-button">Voltar ao Início (Upload)</a>
+        </div>
+
+        <form id="manual-expedition-form">
+            <div>
+                <label for="linha_sola">Linha/Sola:</label>
+                <input type="text" id="linha_sola_manual" name="linha_sola" required>
+            </div>
+            <div>
+                <label for="diaria">Diária:</label>
+                <input type="text" id="diaria_manual" name="diaria" required>
+            </div>
+            <div>
+                <label>Cores:</label>
+                <textarea name="cores_selecionadas" id="cores_manual" rows="5" placeholder="Digite cada cor em uma nova linha ou separadas por vírgula (Ex: NATURAL, PRETO, AMENDOA)" required></textarea>
+            </div>
+            <div>
+                <label for="transportadora">Transportadora:</label>
+                <select name="transportadora" id="transportadora_manual" required>
+                    <option value="">Selecione uma transportadora</option>
+                    <option value="VALDO">VALDO</option>
+                    <option value="SCHIMIDT">SCHIMIDT</option>
+                    <option value="TGB">TGB</option>
+                </select>
+            </div>
+            <div>
+                <label for="local">Local:</label>
+                <input type="text" name="local" id="local_manual" required>
+            </div>
+            <div>
+                <label for="quantidade">Quantidade:</label>
+                <input type="number" name="quantidade" id="quantidade_manual" required min="1">
+            </div>
+            <div>
+                <label for="nf">NF:</label>
+                <input type="number" name="nf" id="nf_manual" required>
+            </div>
+            <div>
+                <label for="observacao">Obs:</label>
+                <textarea name="observacao" id="observacao_manual"></textarea>
+            </div>
+            <button type="button" onclick="adicionarExpedicaoManual()">REGISTRAR EXPEDIÇÃO MANUAL</button>
+        </form>
+        <script>
+            function adicionarExpedicaoManual() {
+                const linhaSola = document.getElementById('linha_sola_manual').value;
+                const diaria = document.getElementById('diaria_manual').value;
+                // As cores agora são digitadas em uma textarea e precisam ser tratadas como array de string
+                const coresInput = document.getElementById('cores_manual').value;
+                const coresSelecionadas = coresInput.split(/,|\n/).map(item => item.trim()).filter(item => item !== '');
+
+                const transportadora = document.getElementById('transportadora_manual').value;
+                const local = document.getElementById('local_manual').value;
+                const quantidade = document.getElementById('quantidade_manual').value;
+                const nf = document.getElementById('nf_manual').value;
+                const observacao = document.getElementById('observacao_manual').value;
+
+                if (!linhaSola || !diaria || coresSelecionadas.length === 0 || !transportadora || !local || !quantidade || !nf) {
+                    alert('Por favor, preencha todos os campos obrigatórios (Linha/Sola, Diária, Cores, Transportadora, Local, Quantidade, NF).');
+                    return;
+                }
+
+                const dadosExpedicao = {
+                    linha_sola: linhaSola,
+                    diaria: diaria,
+                    cores_selecionadas: coresSelecionadas,
+                    transportadora: transportadora,
+                    local: local,
+                    observacao: observacao,
+                    quantidade: parseInt(quantidade, 10),
+                    nf: nf,
+                    pedido_numero: 'MANUAL', // Define um valor padrão para pedidos manuais, se necessário
+                };
+
+                fetch('/salvar_expedicao', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dadosExpedicao)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Limpar o formulário após o sucesso
+                        document.getElementById('linha_sola_manual').value = '';
+                        document.getElementById('diaria_manual').value = '';
+                        document.getElementById('cores_manual').value = '';
+                        document.getElementById('transportadora_manual').value = '';
+                        document.getElementById('local_manual').value = '';
+                        document.getElementById('quantidade_manual').value = '0';
+                        document.getElementById('nf_manual').value = '';
+                        document.getElementById('observacao_manual').value = '';
+                    } else {
+                        alert('Erro ao registrar expedição manual: ' + data.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Erro:', error);
+                    alert('Erro ao comunicar com o servidor.');
+                });
+            }
+        </script>
+    </body>
+</html>

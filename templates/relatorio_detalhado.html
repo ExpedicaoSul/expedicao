@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex, nofollow">
+        <title>Relatório Detalhado de Expedição</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <h1>Relatório Detalhado de Expedição</h1>
+        <div class="button-group">
+            <a href="/expedicao" class="back-button" id="adc-pdd">Voltar ao Formulário</a>
+            <a href="/relatorio_agrupado" class="back-button">Ver Relatório Agrupado</a>
+            <a href="/" class="back-button">Voltar ao Início (Upload)</a>
+            <button onclick="window.print()" class="print-button">Imprimir Relatório</button>
+        </div>
+
+        <table id="tabelaRelatorio">
+            <thead>
+                <tr>
+                    <th>NF</th> 
+                    <th>Linha/Sola</th>
+                    <th>Diária</th>
+                    <th>Cores Selecionadas</th>
+                    <th>Transportadora</th>
+                    <th>Local</th>
+                    <th>Observação</th>
+                    <th>Quantidade</th>
+                    <th>Ações</th> 
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="9">Carregando dados...</td></tr> 
+            </tbody>
+        </table>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                function loadExpeditions() { 
+                    fetch('/api/relatorio_detalhado_dados')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const tabelaBody = document.querySelector('#tabelaRelatorio tbody');
+                            tabelaBody.innerHTML = ''; 
+                            
+                            if (data.length === 0) {
+                                tabelaBody.innerHTML = '<tr><td colspan="9">Nenhuma expedição registrada ainda.</td></tr>'; // COLSPAN AJUSTADO para 9
+                                return;
+                            }
+                            data.forEach(expedicao => {
+                                const row = tabelaBody.insertRow();
+                                row.insertCell().textContent = expedicao.nf || ''; 
+                                // Removido: row.insertCell().textContent = expedicao.pedido_numero || ''; 
+                                row.insertCell().textContent = expedicao.linha_sola || '';
+                                row.insertCell().textContent = expedicao.diaria || '';
+                                
+                                // Agora expedicao.cores_selecionadas JÁ é um array de strings formatadas
+                                row.insertCell().textContent = expedicao.cores_selecionadas ? expedicao.cores_selecionadas.join(', ') : '';
+                                
+                                row.insertCell().textContent = expedicao.transportadora || '';
+                                row.insertCell().textContent = expedicao.local || '';
+                                row.insertCell().textContent = expedicao.observacao || '';
+                                row.insertCell().textContent = (expedicao.quantidade || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                
+                                // Removido: Célula para Data Registro
+                                // let formattedDate = '';
+                                // if (expedicao.data_registro) {
+                                //     try {
+                                //         const dateObj = new Date(expedicao.data_registro);
+                                //         formattedDate = dateObj.toLocaleString('pt-BR', { 
+                                //             year: 'numeric', 
+                                //             month: '2-digit', 
+                                //             day: '2-digit', 
+                                //             hour: '2-digit', 
+                                //             minute: '2-digit', 
+                                //             second: '2-digit' 
+                                //         });
+                                //     } catch (e) {
+                                //         console.error("Erro ao formatar data:", expedicao.data_registro, e);
+                                //         formattedDate = expedicao.data_registro; 
+                                //     }
+                                // }
+                                // row.insertCell().textContent = formattedDate;
+
+                                // CÉLULA PARA O BOTÃO DE EXCLUIR
+                                const actionCell = row.insertCell();
+                                const deleteButton = document.createElement('button');
+                                deleteButton.textContent = 'Excluir';
+                                deleteButton.classList.add('delete-button');
+                                deleteButton.dataset.id = expedicao.id; 
+                                deleteButton.dataset.pedidoNumero = expedicao.pedido_numero; 
+                                deleteButton.dataset.coresSelecionadas = JSON.stringify(expedicao.cores_selecionadas); // JSON.stringify para passar array
+                                
+                                deleteButton.addEventListener('click', handleDelete);
+                                actionCell.appendChild(deleteButton);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar dados do relatório detalhado:', error);
+                            const tabelaBody = document.querySelector('#tabelaRelatorio tbody');
+                            tabelaBody.innerHTML = `<tr><td colspan="9" style="color: red;">Erro ao carregar dados: ${error.message}. Verifique o console para mais detalhes.</td></tr>`; // COLSPAN AJUSTADO para 9
+                        });
+                }
+
+                function handleDelete(event) {
+                    const button = event.target;
+                    const expedicaoId = button.dataset.id;
+                    const pedidoNumero = button.dataset.pedidoNumero;
+                    const coresSelecionadas = JSON.parse(button.dataset.coresSelecionadas); 
+
+                    if (confirm(`Tem certeza que deseja excluir a expedição ID ${expedicaoId} (Pedido: ${pedidoNumero}, Cores: ${coresSelecionadas.join(', ')})?`)) {
+                        fetch(`/api/excluir_expedicao/${expedicaoId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw new Error(err.message || 'Erro desconhecido ao excluir.'); });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                loadExpeditions(); // Recarrega os dados da tabela após exclusão
+                            } else {
+                                alert('Falha ao excluir expedição: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro na requisição de exclusão:', error);
+                            alert('Erro ao excluir expedição: ' + error.message);
+                        });
+                    }
+                }
+
+                loadExpeditions(); 
+            });
+        </script>
+    </body>
+</html>

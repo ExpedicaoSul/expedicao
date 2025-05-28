@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex, nofollow">
+        <title>Formulário de Expedição</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <h1>Formulário de Expedição</h1>
+
+        <div class="button-group"> <a href="/relatorio_detalhado" class="back-button">Ver Relatório Detalhado</a>
+            <a href="/relatorio_agrupado" class="back-button">Ver Relatório Agrupado</a>
+            <a href="/entrada_manual" class="back-button" id="adc-pdd-man">Entrada Manual</a>
+            <a href="/" class="back-button">Voltar ao Início (Upload)</a>
+        </div>
+
+        <form id="expedition-form">
+            <div>
+                <label for="pedido_numero">Nº do Pedido:</label> <input type="text" id="pedido_numero" name="pedido_numero" required onblur="buscarDadosPedido()">
+            </div>
+
+            <div>
+                <label for="linha_sola">Linha/Sola:</label> <input type="text" id="linha_sola" name="linha_sola" readonly>
+            </div>
+
+            <div>
+                <label for="diaria">Diária:</label>
+                <input type="text" id="diaria" name="diaria" readonly>
+            </div>
+
+            <div>
+                <label>Cores:</label>
+                <div id="cores-list-container">
+                    <div id="select-all-colors-container">
+                        <input type="checkbox" id="selecionarTodasCores" onchange="toggleSelectAllColors()">
+                        <label for="selecionarTodasCores">Selecionar Todas</label>
+                    </div>
+                    <div id="cores-container">
+                        <p>Nenhuma cor disponível para este pedido.</p> </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="transportadora">Transportadora:</label>
+                <select name="transportadora" id="transportadora">
+                    <option value="VALDO">VALDO</option>
+                    <option value="SCHIMIDT">SCHIMIDT</option>
+                    <option value="TGB">TGB</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="local">Local:</label>
+                <input type="text" name="local" id="local" required>
+            </div>
+
+            <div>
+                <label for="observacao">Obs:</label> <textarea name="observacao" id="observacao"></textarea>
+            </div>
+
+            <div>
+                <label for="quantidade">Quantidade:</label>
+                <input type="number" name="quantidade" id="quantidade" readonly>
+            </div>
+
+            <div>
+                <label for="nf">NF:</label>
+                <input type="number" name="nf" id="nf" required>
+            </div>
+
+            <button type="button" onclick="adicionarPedido()">ADICIONAR PEDIDO</button>
+        </form>
+
+        <script>
+            // FUNÇÕES DE UTILIDADE
+            function atualizarQuantidade() {
+                const pedido = document.getElementById('pedido_numero').value;
+                // AQUI, COLETAMOS OS VALORES DO CHECKBOX, QUE SÃO AS STRINGS ORIGINAIS
+                const coresSelecionadas = Array.from(document.querySelectorAll('#cores-container input[type="checkbox"][name="cor"]:checked'))
+                                                        .map(checkbox => checkbox.value);
+
+                if (pedido && coresSelecionadas.length > 0) {
+                    fetch(`/calcular_quantidade/${pedido}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ cores: coresSelecionadas }), // Envia as strings originais
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('quantidade').value = data.quantidade || 0;
+                    })
+                    .catch(error => console.error('Erro ao calcular quantidade:', error));
+                } else {
+                    document.getElementById('quantidade').value = 0;
+                }
+            }
+
+            function toggleSelectAllColors() {
+                const coresContainer = document.getElementById('cores-container');
+                const selecionarTodasCoresCheckbox = document.getElementById('selecionarTodasCores');
+                
+                const checkboxes = coresContainer.querySelectorAll('input[type="checkbox"][name="cor"]');
+                
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selecionarTodasCoresCheckbox.checked;
+                });
+                
+                atualizarQuantidade();
+            }
+
+            // FUNÇÃO PRINCIPAL DE BUSCA DE DADOS
+            function buscarDadosPedido() {
+                const pedido = document.getElementById('pedido_numero').value;
+                const coresContainer = document.getElementById('cores-container');
+                const selecionarTodasCoresCheckbox = document.getElementById('selecionarTodasCores');
+
+                if (pedido) {
+                    fetch(`/buscar_pedido/${pedido}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Dados de cores recebidos do Flask:", data.cores); // Para depuração
+                            
+                            document.getElementById('linha_sola').value = data.linha || '';
+                            document.getElementById('diaria').value = data.diaria || '';
+
+                            coresContainer.innerHTML = ''; 
+                            selecionarTodasCoresCheckbox.checked = false;
+
+                            if (data.cores && data.cores.length > 0) {
+                                // Itera sobre a lista de objetos {value, text}
+                                data.cores.forEach(corItem => { 
+                                    const div = document.createElement('div');
+                                    div.className = 'color-checkbox-item'; 
+
+                                    const checkbox = document.createElement('input');
+                                    checkbox.type = 'checkbox';
+                                    checkbox.id = `cor-${corItem.value.replace(/[^a-zA-Z0-9]/g, '-')}`; // Cria um ID válido
+                                    checkbox.name = 'cor'; 
+                                    checkbox.value = corItem.value; // O VALOR É A STRING ORIGINAL COMPLETA
+                                    checkbox.onchange = atualizarQuantidade;
+
+                                    const label = document.createElement('label');
+                                    label.htmlFor = checkbox.id; // Liga o label ao checkbox
+                                    label.textContent = corItem.text; // O TEXTO É A STRING FORMATADA
+
+                                    div.appendChild(checkbox);
+                                    div.appendChild(label);
+                                    coresContainer.appendChild(div);
+                                });
+                            } else {
+                                coresContainer.innerHTML = '<p>Nenhuma cor disponível para este pedido.</p>';
+                            }
+
+                            atualizarQuantidade();
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar dados do pedido.', error);
+                            document.getElementById('linha_sola').value = '';
+                            document.getElementById('diaria').value = '';
+                            coresContainer.innerHTML = '<p>Erro ao carregar cores.</p>';
+                            document.getElementById('quantidade').value = '';
+                        });
+                } else {
+                    document.getElementById('linha_sola').value = '';
+                    document.getElementById('diaria').value = '';
+                    coresContainer.innerHTML = '<p>Nenhuma cor disponível para este pedido.</p>'; 
+                    selecionarTodasCoresCheckbox.checked = false;
+                    document.getElementById('quantidade').value = '';
+                }
+            }
+
+            function adicionarPedido() {
+                const pedidoNumero = document.getElementById('pedido_numero').value;
+                const linhaSola = document.getElementById('linha_sola').value;
+                const diaria = document.getElementById('diaria').value;
+                
+                // AQUI, COLETAMOS OS VALORES ORIGINAIS DOS CHECKBOXES PARA ENVIAR AO BACKEND
+                const coresSelecionadas = Array.from(document.querySelectorAll('#cores-container input[type="checkbox"][name="cor"]:checked'))
+                                                        .map(checkbox => checkbox.value);
+                
+                const transportadora = document.getElementById('transportadora').value;
+                const local = document.getElementById('local').value;
+                const observacao = document.getElementById('observacao').value;
+                const quantidade = document.getElementById('quantidade').value;
+                const nf = document.getElementById('nf').value;
+
+                if (!pedidoNumero || !quantidade || coresSelecionadas.length === 0 || !local || !nf) {
+                    alert('Por favor, preencha o número do pedido, selecione as cores, o Local, a Quantidade e a NF.');
+                    return;
+                }
+
+                const dadosExpedicao = {
+                    pedido_numero: pedidoNumero,
+                    linha_sola: linhaSola,
+                    diaria: diaria,
+                    cores_selecionadas: coresSelecionadas, // Lista de strings ORIGINAIS
+                    transportadora: transportadora,
+                    local: local,
+                    observacao: observacao,
+                    quantidade: parseInt(quantidade, 10),
+                    nf: nf,
+                };
+
+                fetch('/salvar_expedicao', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dadosExpedicao)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Limpar o formulário após o sucesso
+                        document.getElementById('pedido_numero').value = '';
+                        document.getElementById('linha_sola').value = '';
+                        document.getElementById('diaria').value = '';
+                        
+                        document.getElementById('cores-container').innerHTML = '<p>Nenhuma cor disponível para este pedido.</p>'; 
+                        document.getElementById('selecionarTodasCores').checked = false;
+
+                        document.getElementById('transportadora').value = 'VALDO';
+                        document.getElementById('local').value = '';
+                        document.getElementById('observacao').value = '';
+                        document.getElementById('quantidade').value = '0';
+                        document.getElementById('nf').value = '';
+                    } else {
+                        alert('Erro ao registrar expedição: ' + data.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Erro:', error);
+                    alert('Erro ao comunicar com o servidor.');
+                });
+            }
+        </script>
+    </body>
+</html>

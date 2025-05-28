@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex, nofollow">
+        <title>Upload da Base de Dados</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <h1>Upload da Base de Dados de Pedidos</h1>
+
+        <div class="nav-buttons">
+            <a href="/">Upload de Dados</a> <a href="/expedicao" id="adc-pdd">Adicionar Pedido</a>
+            <a href="/entrada_manual" id="adc-pdd-man">Adicionar Pedido Manual</a>
+            <a href="/relatorio_detalhado">Relatório Detalhado</a>
+            <a href="/relatorio_agrupado">Relatório Agrupado</a>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <input type="submit" value="Enviar Base de Dados">
+        </form>
+    </body>
+</html>

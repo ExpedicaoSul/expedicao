@@ -1,0 +1,230 @@
+/* Estilos Gerais */
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+h1 {
+    color: #0056b3;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+/* Estilos para Grupos de Botões e Links de Navegação */
+.button-group, .nav-buttons {
+    margin-bottom: 30px;
+    display: flex;
+    flex-wrap: wrap; /* Permite quebrar linha em telas menores */
+    gap: 10px; /* Espaço entre os botões */
+    justify-content: center; /* Centraliza os botões */
+}
+
+.button-group a, .nav-buttons a, .back-button{
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+    white-space: nowrap; /* Evita que o texto do botão quebre */
+}
+
+.button-group a:hover, .nav-buttons a:hover, .back-button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos para Botões de Navegação e Ação */
+.back-button,
+.print-button { /* Adicionado .print-button aqui para estilos base */
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 5px; /* Adiciona um pequeno espaçamento para separar botões se não estiverem em um button-group */
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff; /* Azul padrão */
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover,
+.print-button:hover { /* Adicionado .print-button:hover */
+    background-color: #0056b3; /* Azul mais escuro no hover */
+}
+
+/* Estilo específico para o botão de imprimir, se quiser uma cor diferente */
+.print-button {
+    background-color: #28a745; /* Um verde, por exemplo */
+}
+
+.print-button:hover {
+    background-color: #218838; /* Verde mais escuro no hover */
+}
+
+#adc-pdd, #adc-pdd-man {
+    background-color: #2e5377;
+}
+
+#adc-pdd:hover, #adc-pdd-man:hover {
+    background-color: #0a1e33;
+}
+/* Estilos de Formulário */
+form {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto; /* Centraliza o formulário */
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block; /* Ocupa a própria linha */
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    width: calc(100% - 12px); /* 100% menos o padding */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Garante que padding não aumente a largura total */
+}
+
+textarea {
+    resize: vertical; /* Permite redimensionar verticalmente */
+    min-height: 80px;
+}
+
+input[type="submit"],
+button[type="button"] {
+    display: block; /* Ocupa a própria linha */
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #28a745; /* Verde para ação principal */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+input[type="submit"]:hover,
+button[type="button"]:hover {
+    background-color: #218838;
+}
+
+/* Estilos de Tabela (para relatórios) */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f8f8; /* Linhas pares com fundo levemente diferente */
+}
+
+tr:hover {
+    background-color: #e2f4ff; /* Fundo ao passar o mouse */
+}
+
+
+.total-geral {
+    margin-top: 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 10px;
+    border: 1px solid #007bff;
+    background-color: #e6f2ff;
+    width: 50%; /* Mesma largura da tabela */
+    box-sizing: border-box; /* Inclui padding e border na largura */
+}
+/* Botão de Excluir Específico */
+.delete-button {
+    background-color: #dc3545; /* Vermelho para exclusão */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        font-size: 10pt; /* Ajusta o tamanho da fonte para impressão */
+    }
+
+    /* Oculta elementos que não devem ser impressos */
+    .button-group, .print-button, .back-button, .delete-button {
+        display: none;
+    }
+
+    h1 {
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    table {
+        width: 100%; /* Garante que a tabela ocupe toda a largura da página impressa */
+        border-collapse: collapse;
+        margin-top: 0; /* Remove margem superior da tabela para impressão */
+    }
+
+    th, td {
+        border: 1px solid #ccc; /* Adiciona bordas para melhor visualização na impressão */
+        padding: 8px;
+        text-align: left;
+        font-size: 9pt; /* Ajusta a fonte da tabela para impressão */
+    }
+
+    #totalGeralContainer {
+        text-align: right;
+        margin-top: 20px;
+        font-size: 11pt;
+        font-weight: bold;
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
+    }
+}
